@@ -32,7 +32,7 @@
                 
             <h3>Installation</h3>
 <p><strong>Note</strong>: Stitcher is currently in alpha. This means things can break with updates!</p>
-<p>Stitcher is installed via Composer. It requires a PHP version of at least 5.6, but 7.0 or higher is adviced.</p>
+<p>Stitcher is installed via Composer. It requires a PHP version of at least 5.6, but 7.0 or higher is advised.</p>
 <pre><code class="language-sh">composer require brendt/stitcher:1.0.0-alpha
 php vendor/brendt/stitcher/install/stitcher site:install</code></pre>
 <p>Running the <code>site:install</code> command will generate the needed directory structure to create a Stitcher project.
@@ -65,7 +65,7 @@ completely generated as HTML before the website is visited.</p>
 <pre><code class="language-sh">./stitcher site:generate</code></pre>
 <p>This command will generate your website in the <code>directories.src</code> directory. It will &quot;stitch&quot; all templates, data, images,
 assets, etc. together into one whole result.</p>
-<p>The public virtual host configuration should be somethign like this.</p>
+<p>The public virtual host configuration should be something like this.</p>
 <pre><code class="language-xml">&lt;VirtualHost *:80&gt;
     DocumentRoot "path_to_project/public"
     ServerName stitcher.local
