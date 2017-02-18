@@ -1,0 +1,83 @@
+<html>
+    <head>
+        
+            <title>Stitcher 1.0</title>
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Static websites with PHP, YAML, MarkDown, JSON and Smarty/Twig">
+            <style>body{padding:0;margin:0;position:relative;background:#f5f5f5;font-family:"Helvetica Neue",Helvetica,sans-serif;font-size:18px}.wrapper{width:960px;margin:0 auto}.vwrapper{margin-top:2em}img{display:block;max-width:25%}a{color:#128d9e}h1{color:#128d9e}h2{margin-top:40px}h3{margin-top:1.6em;margin-bottom:.7em}h4{margin-top:2.5em;margin-bottom:1em}p{line-height:1.7em}li{margin:10px 0}li>code,p>code{display:inline-block;border-bottom:1px solid #ff8719;cursor:pointer;padding-left:2px;padding-right:2px;line-height:1em;padding-bottom:2px}code{background:#fff;font-family:Monaco,monospace}pre>code{display:block;border-left:5px solid #ff8719;padding:1.3em 30px;font-size:.8em;line-height:1.5em;cursor:pointer;margin-left:-20px;overflow-x:scroll}.button{cursor:pointer;color:#fff;border:1px solid #fff;padding:10px;display:inline-block;text-decoration:none;margin-right:10px}.button:last-child{margin-right:0}.button-link{margin-right:10px;color:#fff;font-weight:100}header{display:block;background:#128d9e;color:#fff}header nav>a{color:inherit;display:inline-block;text-decoration:none;padding:15px 20px}header nav>a:first-child{padding-left:0}.stitcher{color:inherit;font-weight:100;font-style:italic}.next{display:block;float:right}.prev{display:block;float:left}footer{margin-top:40px;background:#484848;color:#fff;padding:30px 0}footer:after{clear:both;display:block;content:' '}footer a{color:inherit}.blog{width:90%;background:#fff;margin-top:4em;padding-bottom:2em}.blog>h1{padding:1.5em 4% .5em}.blog>h2,.blog>h3,.blog>h4,.blog>h5{padding:0 5%}.blog img+h1{padding-top:.75em}.blog>p{padding-left:5%;padding-right:5%}.blog>pre>code{margin-left:0}.blog>img{display:block;width:100%;max-width:100%}.image--header{display:block}</style>
+        
+    </head>
+    <body>
+        
+            <a href="https://github.com/brendt/stitcher" target="_blank" rel="nofollow noopener"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/652c5b9acfaddf3a9c326fa6bde407b87f7be0f4/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6f72616e67655f6666373630302e706e67" alt="Fork Stitcher on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_orange_ff7600.png"></a>
+        
+        
+            
+                <header>
+                    <nav class="wrapper">
+                        <a href="/" class="stitcher">Stitcher</a>
+                        <a href="/guide">Guide</a>
+                        <a href="/blog">Blog</a>
+                    </nav>
+                </header>
+            
+
+            
+                            
+
+            <div class="wrapper">
+                
+    <article class="blog">
+                <h1>Tackeling repsonsive images - part 2</h1>
+
+        <p>In my <a href="/blog/tackling_repsonsive_images-part_1">previous post</a>, I wrote about the idea behind integrating responsive images and Stitcher. A pretty robust library came to be. You could throw it any image, and it would generate a set of variations of that images, scaled down for multiple devices. It returned an object, wcich Stitcher parsed into a template variable. In templates, the following is now possible.</p>
+<pre><code class="language-html">&lt;img src="{$image.src}" srcset="{$image.srcset}" sizes="{$image.sizes}" /&gt;</code></pre>
+<p>If you would like to read the source code instead of this post, <a href="https://github.com/brendt/responsive-images">here you go</a>.</p>
+<p>Like I wrote earlier, the first version of the scaling down algorithm was based on the width of images. As you might imagine, it was not a real solution when trying to optimize image bandwidth usage. The real solution was in downscaling images based on their filesizes. The problem there: how could you know the dimensions of an image, when you know the desired filesize. This is where high school maths came into play. I was actually a bit surprised as to how much fun I had figuring this &quot;forumla&quot; out. I haven't been in school for a few years, and I was rather happy because I could use some basic maths skills again!</p>
+<p>This is what I did:</p>
+<pre><code>filesize = 1.000.000
+width = 1920
+ratio = 9 / 16
+height = ratio * width
+
+area = width * height
+ &lt;=&gt; area = width * width * ratio
+
+pixelprice = filesize / area
+ &lt;=&gt; filesize = pixelprice * area
+ &lt;=&gt; filesize = pixelprice * (width * width * ratio)
+ &lt;=&gt; width * width * ratio = filesize / pixelprice
+ &lt;=&gt; width ^ 2 = (filesize / pixelprice) / ratio
+ &lt;=&gt; width = sqrt((filesize / pixelprice) / ratio)</code></pre>
+<p>So given a constant <code>pixelprice</code>, I can calculate the required width an image needs to have a specified filesize. Here's the thing though. <code>pixelprice</code> is an approximation of what one pixel in this image costs. That's because not all pixels are worth the same amount of bytes. It heavily depends on which image codecs are used. It is however the best I could do for now, I might add some more logic in the future, but I'd like to try this algorithm out for a while. </p>
+<p>So now the Responsive Factory scales down images by filesize instead of width. A much better metric when you're trying to reduce bandwidth usage. This is how the library is used in Stitcher:</p>
+<pre><code class="language-php">use Brendt\Image\Config\DefaultConfigurator;
+use Brendt\Image\ResponsiveFactory;
+
+$config = new DefaultConfigurator([
+    'driver'      =&gt; Config::get('engines.image'),
+    'publicPath'  =&gt; Config::get('directories.public'),
+    'sourcePath'  =&gt; Config::get('directories.src'),
+    'enableCache' =&gt; Config::get('caches.image'),
+]);
+
+$responsiveFactory = new ResponsiveFactory($config);</code></pre>
+<p>All images in Stitcher go through this factory, and the factory will generate x-amount of variations of the image, and the browser decides which one it will download. Its pretty cool, and I hope it will help websites to server more optimized images, while a developer can still focus on the most important parts of his project.</p>
+    </article>
+
+            </div>
+
+            <footer>
+                
+    <div class="wrapper">
+        <a class="prev" href="/blog">Back</a>
+            </div>
+
+            </footer>
+
+            
+    <script>document.addEventListener('DOMContentLoaded',codeClick);function codeClick(){var codeBlocks=document.querySelectorAll('code');for(var codeBlock of codeBlocks){codeBlock.addEventListener('click',function(){var range=document.createRange();range.selectNode(this);window.getSelection().addRange(range);});}}</script>
+
+        
+    </body>
+</html>
