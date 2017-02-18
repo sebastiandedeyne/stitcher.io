@@ -28,7 +28,7 @@
             <div class="wrapper">
                 
     <article class="blog">
-                <h1>Tackeling repsonsive images - part 2</h1>
+                <h1>Tackling repsonsive images - part 2</h1>
 
         <p>In my <a href="/blog/tackling_repsonsive_images-part_1">previous post</a>, I wrote about the idea behind integrating responsive images and Stitcher. A pretty robust library came to be. You could throw it any image, and it would generate a set of variations of that images, scaled down for multiple devices. It returned an object, wcich Stitcher parsed into a template variable. In templates, the following is now possible.</p>
 <pre><code class="language-html">&lt;img src="{$image.src}" srcset="{$image.srcset}" sizes="{$image.sizes}" /&gt;</code></pre>
