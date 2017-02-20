@@ -31,10 +31,11 @@
             <div class="wrapper">
                 
             <p>Adapters are used in site configuration files to change the way that page is rendered. An adapter will take the page's
-configuration and change or adapt it into one or more new configurations. Currently, two adapters are supported:</p>
+configuration and change or adapt it into one or more new configurations. Currently, thee adapters are supported:</p>
 <ul>
 <li>Pagination</li>
 <li>Collection</li>
+<li>Order</li>
 </ul>
 <h4>Pagination</h4>
 <p>The pagination adapter takes a page with a collection of entries and generates pagination for that collection. This
@@ -82,6 +83,17 @@ adapter will generate several pages instead of one, and adds the <code>$paginati
         collection:
             variable: example
             field: id</code></pre>
+<h4>Order</h4>
+<p>Applies order to a data set, based on a field of that data.</p>
+<pre><code class="language-yaml">/blog:
+    template: blog/overview
+    data:
+        posts: data/blog.yml
+    adapters:
+        order:
+            variable: posts
+            field: date
+            direction: desc</code></pre>
     
             </div>
 
